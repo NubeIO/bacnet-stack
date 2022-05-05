@@ -52,16 +52,22 @@ var flagsWhois = struct {
 	endRange:      flag{name: "end", shortHand: "e", usage: "bacnet device id end range"},
 }
 
-var flagsRead = struct {
-	deviceId       flag
-	objectType     flag
-	objectInstance flag
-	property       flag
+var flagsPoint = struct {
+	deviceId        flag
+	objectType      flag
+	objectInstance  flag
+	property        flag
+	writeValue      flag
+	priority        flag
+	releasePriority flag
 }{
-	deviceId:       flag{name: "device", shortHand: "d", usage: "bacnet device number"},
-	objectType:     flag{name: "type", shortHand: "t", usage: "bacnet object type ao, av, bv"},
-	objectInstance: flag{name: "inst", shortHand: "i", usage: "bacnet object number 1, 2 as in binary-input-1"},
-	property:       flag{name: "prop", shortHand: "r", usage: "what to read example: present value:85"},
+	deviceId:        flag{name: "device", shortHand: "d", usage: "bacnet device number"},
+	objectType:      flag{name: "type", shortHand: "t", usage: "bacnet object type ao, av, bv"},
+	objectInstance:  flag{name: "inst", shortHand: "i", usage: "bacnet object number 1, 2 as in binary-input-1"},
+	property:        flag{name: "prop", shortHand: "r", usage: "what to read example: present value:85"},
+	writeValue:      flag{name: "value", shortHand: "v", usage: "what to read example: present value:85"},
+	priority:        flag{name: "priority", shortHand: "q", usage: "what to read example: present value:85"},
+	releasePriority: flag{name: "release", shortHand: "o", usage: "what to read example: present value:85"},
 }
 
 func init() {

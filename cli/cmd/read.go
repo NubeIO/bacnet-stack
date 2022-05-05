@@ -21,14 +21,11 @@ var readCmd = &cobra.Command{
 }
 
 func read(cmd *cobra.Command, args []string) {
-
 	bac := bacnet.New()
-
 	t := &bacnet.TypeRead{
 		ObjectType:     objectType,
 		ObjectInstance: objectInstance,
 		Property:       property,
-
 		Common: &bacnet.Common{
 			DeviceID:      deviceId,
 			NetworkNumber: networkNumber,
@@ -40,11 +37,11 @@ func read(cmd *cobra.Command, args []string) {
 
 func init() {
 	//read example
-	//go run main.go read -d=3000 -t=1 -i=1 -r=85
+	//go run main.go read --device=3000 --type=4 --inst=1 --prop=85
 	RootCmd.AddCommand(readCmd)
-	readCmd.Flags().IntVarP(&deviceId, flagsRead.deviceId.name, flagsRead.deviceId.shortHand, 2508, flagsRead.deviceId.usage)
-	readCmd.Flags().StringVarP(&objectType, flagsRead.objectType.name, flagsRead.objectType.shortHand, "", flagsRead.objectType.usage)
-	readCmd.Flags().IntVarP(&objectInstance, flagsRead.objectInstance.name, flagsRead.objectInstance.shortHand, 1, flagsRead.objectInstance.usage)
-	readCmd.Flags().IntVarP(&property, flagsRead.property.name, flagsRead.property.shortHand, 1, flagsRead.property.usage)
+	readCmd.Flags().IntVarP(&deviceId, flagsPoint.deviceId.name, flagsPoint.deviceId.shortHand, 2508, flagsPoint.deviceId.usage)
+	readCmd.Flags().StringVarP(&objectType, flagsPoint.objectType.name, flagsPoint.objectType.shortHand, "", flagsPoint.objectType.usage)
+	readCmd.Flags().IntVarP(&objectInstance, flagsPoint.objectInstance.name, flagsPoint.objectInstance.shortHand, 1, flagsPoint.objectInstance.usage)
+	readCmd.Flags().IntVarP(&property, flagsPoint.property.name, flagsPoint.property.shortHand, 1, flagsPoint.property.usage)
 
 }

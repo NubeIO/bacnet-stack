@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	btypes "github.com/NubeIO/bacnet-stack/types"
+	"github.com/NubeIO/nubeio-rubix-lib-helpers-go/pkg/nils"
 	"github.com/NubeIO/nubeio-rubix-lib-helpers-go/pkg/types"
-	"strings"
 )
 
 /*
@@ -77,61 +77,95 @@ bacrp 123 analog-output 101 priority-array
 bacrp 123 1 101 87
 */
 
-type TypeRead struct {
-	Common         *Common
-	ObjectType     string
-	ObjectInstance int
-	Property       int
+type TypeWrite struct {
+	Common          *Common
+	ObjectType      string
+	ObjectInstance  int
+	Property        int
+	WriteValue      float64
+	WritePriority   int
+	ReleasePriority *bool
 }
 
-type ResponseRead struct {
+type ResponseWrite struct {
 	DeviceID  int
 	DeviceMac string
 }
 
-func readBuilder(t *TypeRead) (cmd []string) {
+const (
+	typeBool  = "9"
+	typeFloat = "4"
+	typeNull  = "0"
+)
+
+func writeBuilder(t *TypeWrite) (cmd []string) {
 	deviceId := t.Common.DeviceID
-	cmd = []string{read}
-	//bacrp 123 analog-output 101 priority-array
-	cmd = append(cmd, types.ToString(deviceId), t.ObjectType, types.ToString(t.ObjectInstance), types.ToString(t.Property))
+	cmd = []string{write}
+	value, dataType, priority, err := writeBuilderData(t)
+	if err != nil {
+		fmt.Println("error on bacnet write parseWrite err", err)
+	}
+	//change to null
+	if nils.BoolIsNil(t.ReleasePriority) {
+		dataType = "0"
+		value = 0
+	}
+	//./bacwp 123 1 1 85 16 -1 4 11.11
+	// ./bacwp 123 1 1 85 16 -1 0 0 write null
+	cmd = append(cmd, types.ToString(deviceId), t.ObjectType, types.ToString(t.ObjectInstance), "85", fmt.Sprintf("%d", priority), "-1", dataType, fmt.Sprintf("%f", value))
 	return
 }
 
-func parseRead(in string, t *TypeRead) (out float64, err error) {
-	//Binary-Input-3 Binary-Output-4 Binary-Value-5
+func writeBuilderData(t *TypeWrite) (out float64, dataType string, priority int, err error) {
+	//Binary-Output-4 Binary-Value-5 Analog-Output-1 Analog-Value-2
+	value := t.WriteValue
+	priority = t.WritePriority
 	typ := t.ObjectType
-	if typ == fmt.Sprintf("%d", btypes.BinaryInputNum) || typ == fmt.Sprintf("%d", btypes.BinaryOutputNum) || typ == fmt.Sprintf("%d", btypes.BinaryValueNum) {
-		if in == "active" {
-			return 1, nil
-		} else if in == "inactive" {
-			return 0, nil
-		} else {
-			return 0, errors.New("unknown bool payload")
-		}
-	} else {
-		out, err = toFloat(in)
-		if err != nil {
-			return 0, errors.New("failed to type convert to float the bacnet payload")
-		}
+	if priority < 1 {
+		fmt.Println("priority must be between 1 and 16")
+		priority = 1
+	} else if priority > 16 {
+		fmt.Println("priority must be between 1 and 16")
+		priority = 16
 	}
-	return out, nil
+	if typ == fmt.Sprintf("%d", btypes.BinaryOutputNum) || typ == fmt.Sprintf("%d", btypes.BinaryValueNum) {
+		if value > 0 {
+			return 1, typeBool, priority, nil
+		}
+		return 0, typeBool, priority, nil
+	} else if typ == fmt.Sprintf("%d", btypes.AnalogOutputNum) || typ == fmt.Sprintf("%d", btypes.AnalogValueNum) {
+		return value, typeFloat, priority, nil
+	} else {
+		return 0, "", priority, errors.New("unknown type")
+	}
 }
 
-func (inst *BACnet) Read(t *TypeRead) (out float64, err error) {
-	path, _ := inst.getBacnetDir()
-	res := ""
-	cmd := readBuilder(t)
-	res, err = inst.Run(path, cmd[0:]...)
-	if err != nil {
-		return 0, err
-	} else {
-		res = strings.TrimRight(res, "\r\n") //remove \r from the end of the string
-		out, err = parseRead(res, t)
-		if err != nil {
-			fmt.Println("BACnet parse err", err)
-			return 0, err
-		}
-		fmt.Println("BACnet parse response", out)
-		return out, err
+func writeOk(msg string) (ok bool) {
+	if msg == WwAcknowledged {
+		ok = true
 	}
+	return
+}
+
+/*
+write a bo
+./bacwp 123 4 1 85 16 -1 9 0
+
+write a bo value to @16 to null
+./bacwp 2508 4 1 85 16 -1 0 0
+*/
+
+//Write
+func (inst *BACnet) Write(t *TypeWrite) (ok bool, err error) {
+	path, _ := inst.getBacnetDir()
+	out := ""
+	cmd := writeBuilder(t)
+	out, err = inst.Run(path, cmd[0:]...)
+	if err != nil {
+		return false, err
+	} else {
+		ok = writeOk(out)
+		return
+	}
+
 }

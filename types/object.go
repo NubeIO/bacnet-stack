@@ -1,4 +1,4 @@
-package types
+package btypes
 
 import "fmt"
 
@@ -19,6 +19,18 @@ const (
 	MultiStateValue   ObjectType = 19
 	TrendLog          ObjectType = 20
 	CharacterString   ObjectType = 40
+)
+
+const (
+	AnalogInputNum      = 0
+	AnalogOutputNum     = 1
+	AnalogValueNum      = 2
+	BinaryInputNum      = 3
+	BinaryOutputNum     = 4
+	BinaryValueNum      = 5
+	MultiStateInputNum  = 13
+	MultiStateOutputNum = 14
+	MultiStateValueNum  = 19
 )
 
 const (

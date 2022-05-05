@@ -1,4 +1,4 @@
-package types
+package btypes
 
 import "encoding/json"
 
